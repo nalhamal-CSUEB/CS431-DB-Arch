@@ -1,0 +1,180 @@
+<html>
+<head>
+  <title>Warranty Table</title>
+  <style>
+    th button { font-size: 10px; }
+    td input { width: 100%; box-sizing: border-box; }
+    .action-buttons button { margin: 0 4px; }
+    #add-row-btn { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Warranty Table</h1>
+  <button id="add-row-btn">+ Add Row</button>
+  <table border="1" id="result"></table>
+
+  <script>
+    let currentEditRow = null;
+    let originalRowData = {};
+    let primaryKeyField = null;
+    let headersCache = [];
+
+    const tableName = 'warranty';
+
+    async function loadTableData(orderBy = null, orderDir = 'ASC') {
+      const query = orderBy ? `?order_by=${orderBy}&order_dir=${orderDir}` : '';
+      const res = await fetch('/api/' + tableName + query);
+      const data = await res.json();
+      const table = document.getElementById('result');
+
+      if (data.length === 0) return table.innerHTML = '<tr><td>No data</td></tr>';
+
+      const headers = Object.keys(data[0]);
+      headersCache = headers;
+      primaryKeyField = headers[0];
+
+      table.innerHTML = '<tr>' + headers.map(h => `
+        <th>
+          ${h}
+          <button onclick="loadTableData('${h}', 'ASC')">▲</button>
+          <button onclick="loadTableData('${h}', 'DESC')">▼</button>
+        </th>`).join('') + '<th>Actions</th></tr>';
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-key', row[primaryKeyField]);
+
+        headers.forEach(h => {
+          const td = document.createElement('td');
+          const input = document.createElement('input');
+          input.value = row[h];
+          input.disabled = true;
+          input.setAttribute('data-field', h);
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+
+        const actionTd = document.createElement('td');
+        actionTd.className = 'action-buttons';
+        tr.appendChild(actionTd);
+
+        tr.onclick = () => {
+          if (currentEditRow && currentEditRow !== tr) return;
+
+          if (!currentEditRow) {
+            currentEditRow = tr;
+            originalRowData = {};
+            [...tr.querySelectorAll('input')].forEach(input => {
+              input.disabled = false;
+              originalRowData[input.dataset.field] = input.value;
+            });
+
+            const updateBtn = document.createElement('button');
+            updateBtn.innerText = 'Update';
+            updateBtn.onclick = (e) => {
+              e.stopPropagation();
+              updateRow(tr);
+            };
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = 'Cancel';
+            cancelBtn.onclick = (e) => {
+              e.stopPropagation();
+              cancelEdit(tr);
+            };
+
+            actionTd.appendChild(updateBtn);
+            actionTd.appendChild(cancelBtn);
+          }
+        };
+
+        table.appendChild(tr);
+      });
+    }
+
+    async function updateRow(tr) {
+      const keyValue = tr.getAttribute('data-key');
+      const inputs = tr.querySelectorAll('input');
+      const data = {};
+
+      inputs.forEach(input => {
+        data[input.dataset.field] = input.value;
+      });
+
+      const method = keyValue === 'new' ? 'POST' : 'PUT';
+      const url = keyValue === 'new' ? `/api/${tableName}` : `/api/${tableName}/${keyValue}`;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert(method === 'POST' ? 'Insert successful!' : 'Update successful!');
+        currentEditRow = null;
+        loadTableData();
+      } else {
+        alert('Request failed');
+      }
+    }
+
+    function cancelEdit(tr) {
+      if (tr.getAttribute('data-key') === 'new') {
+        tr.remove();
+      } else {
+        [...tr.querySelectorAll('input')].forEach(input => {
+          input.value = originalRowData[input.dataset.field];
+          input.disabled = true;
+        });
+        tr.querySelector('.action-buttons').innerHTML = '';
+        currentEditRow = null;
+      }
+    }
+
+    document.getElementById('add-row-btn').onclick = () => {
+      if (currentEditRow) return;
+
+      const table = document.getElementById('result');
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-key', 'new');
+
+      headersCache.forEach(h => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.value = '';
+        input.disabled = false;
+        input.setAttribute('data-field', h);
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+
+      const actionTd = document.createElement('td');
+      actionTd.className = 'action-buttons';
+
+      const updateBtn = document.createElement('button');
+      updateBtn.innerText = 'Update';
+      updateBtn.onclick = (e) => {
+        e.stopPropagation();
+        updateRow(tr);
+      };
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.innerText = 'Cancel';
+      cancelBtn.onclick = (e) => {
+        e.stopPropagation();
+        cancelEdit(tr);
+      };
+
+      actionTd.appendChild(updateBtn);
+      actionTd.appendChild(cancelBtn);
+      tr.appendChild(actionTd);
+
+      table.appendChild(tr);
+      currentEditRow = tr;
+    };
+
+    window.onload = () => loadTableData();
+  </script>
+</body>
+</html>

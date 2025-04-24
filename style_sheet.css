@@ -1,0 +1,43 @@
+body
+ {background-color: #DCDCDC /* Gainsboro */}
+
+table.a
+ {border-collapse: collapse}
+
+table.b
+ {background-color: #FFFAF0 /* Floralwhite */ ; border-style: solid double; border-color:  #FFD700 /* gold */}
+
+table.c
+ {background-color: #CD5C5C /* IndianRed   */ ; border-style: solid ; border-color:  #0000FF /* blue */ #9400D3 /*DarkViolet*/}
+
+table.d
+ {background-color: #DCDCDC /* Gainsboro*/; border-style: double ; border-color: #696969 /*DimGrey*/}
+
+h2.gold {color: #FFD700 /* Gold */}
+
+.al
+ {text-align: center}
+
+.clr1
+ {background-color:#E0FFFF /* lightcyan */}
+
+.clr2
+ {background-color:#FAFAD2 /* lightgoldenrodyellow */; text-align:center}
+
+.clr3
+ {background-color:#E9967A /* lightsalmon */}
+
+.clr4
+ {background-color:#F8F8FF /* ghostwhite */}
+
+.txt1
+ {color: red}
+
+a:link {color: #0000FF /* blue */; text-decoration: none}
+a:visited {text-decoration: none}
+a:hover {color: #FF8C00 /* darkorange */; /*font-size: 105% */ ; text-decoration: none}
+a:active {color: #7FFF00 /* chartreuse /*; text-decoration: none}
+
+
+
+
